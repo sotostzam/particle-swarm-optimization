@@ -2,7 +2,30 @@ import math
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import numpy as np
-from random import random
+
+# Particle class
+class Particle():
+    def __init__(self, x, y, z, velocity):
+        self.pos = [x, y, z]
+        self.velocity = velocity
+        self.best_pos = self.pos
+
+class Swarm():
+    def __init__(self, pop, v_max):
+        self.particles = []             # List of particles in the swarm
+        self.best_particle = None       # Best particle of the swarm
+
+        for _ in range(pop):
+            x = np.random.uniform(-3, 3)
+            y = np.random.uniform(-3, 3)
+            z = ackley(x, y)
+            velocity = np.random.rand(2) * v_max
+            particle = Particle(x, y, z, velocity)
+            self.particles.append(particle)
+            if self.best_particle != None and particle.pos[2] < self.best_particle.pos[2]:
+                self.best_particle = particle
+            else:
+                self.best_particle = particle
 
 # Evaluate Ackley function
 def ackley(x, y, a=20, b=0.2, c=2*math.pi):
@@ -13,30 +36,43 @@ def ackley(x, y, a=20, b=0.2, c=2*math.pi):
 def main():
     dimensions = 2              # Number of dimensions
     max_iterations = 100        # Maximum Iterations
-    c1 = 2.5                    # Personal Acceleration Coefficient
-    c2 = 1.7                    # Social Acceleration Coefficient
-    global_best = 0             # Global Best of Cost function
+    PERSONAL_C = 2.5            # Personal Acceleration Coefficient
+    SOCIAL_C = 1.7              # Social Acceleration Coefficient
+    GLOBAL_BEST = 0             # Global Best of Cost function
+    CONVERGENCE = 0.01          # Convergence value
     population = 20             # Particle Swarm Size
-    swarm_gbest = [0, 0]        # Best swarm potition
-    swarm_gbest_z = math.inf    # Best swarm potition on z
     v_max = 0.1                 # Max Particle Velocity
 
-    # Initialization
-    swarm = -3 + np.random.rand(population, 2) * 6
-    velocity = np.random.rand(population) * v_max
-    output = ackley(swarm[:,0], swarm[:,1])
-
-    for _ in range(0, max_iterations):
-        r1 = random()
-        r2 = random()
-
-    x = np.linspace(-5, 5, 20)
-    y = np.linspace(-5, 5, 20)
+    x = np.linspace(-3, 3, 50)
+    y = np.linspace(-3, 3, 50)
     X, Y = np.meshgrid(x, y)
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection='3d')
-    ax.plot_surface(X, Y, ackley(X, Y), cmap='coolwarm')
-    ax.scatter(swarm[:,0], swarm[:,1], output, marker='*')
+
+    # Initialize swarm
+    swarm = Swarm(population, v_max)
+
+    curr_iter = 0
+    while curr_iter < max_iterations:
+        r1 = np.random.uniform(0, 1)
+        r2 = np.random.uniform(0, 1)
+
+        for particle in swarm.particles:
+            # Update particle's velocity
+            particle.velocity[0] += (PERSONAL_C * r1 * (particle.best_pos[0] - particle.pos[0])) + (GLOBAL_BEST * r2 * (swarm.best_particle.pos[0] - particle.pos[0]))
+            particle.velocity[1] += (PERSONAL_C * r1 * (particle.best_pos[1] - particle.pos[1])) + (GLOBAL_BEST * r2 * (swarm.best_particle.pos[1] - particle.pos[1]))
+
+            # Update particle's position
+            particle.pos[0] += particle.velocity[0]
+            particle.pos[1] += particle.velocity[1]
+
+            plt.clf()
+            ax = fig.add_subplot(1, 1, 1, projection='3d')
+            ax.plot_surface(X, Y, ackley(X, Y), cmap='coolwarm')
+            for particle in swarm.particles:
+                ax.scatter(particle.pos[0], particle.pos[1], particle.pos[2], marker='*', c='r')
+            plt.pause(0.01)
+
+        curr_iter += 1
     plt.show()
 
 if __name__ == "__main__":
