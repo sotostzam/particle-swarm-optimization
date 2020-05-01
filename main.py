@@ -46,31 +46,60 @@ def main():
     x = np.linspace(-3, 3, 50)
     y = np.linspace(-3, 3, 50)
     X, Y = np.meshgrid(x, y)
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10,5))
+    fig.tight_layout()
 
     # Initialize swarm
     swarm = Swarm(population, v_max)
 
     curr_iter = 0
-    while curr_iter < max_iterations:
+    while curr_iter < max_iterations and abs(swarm.best_particle.pos[2] - GLOBAL_BEST) > CONVERGENCE:
         r1 = np.random.uniform(0, 1)
         r2 = np.random.uniform(0, 1)
 
         for particle in swarm.particles:
             # Update particle's velocity
-            particle.velocity[0] += (PERSONAL_C * r1 * (particle.best_pos[0] - particle.pos[0])) + (GLOBAL_BEST * r2 * (swarm.best_particle.pos[0] - particle.pos[0]))
-            particle.velocity[1] += (PERSONAL_C * r1 * (particle.best_pos[1] - particle.pos[1])) + (GLOBAL_BEST * r2 * (swarm.best_particle.pos[1] - particle.pos[1]))
+            particle.velocity[0] += (PERSONAL_C * r1 * (particle.best_pos[0] - particle.pos[0])) + (SOCIAL_C * r2 * (swarm.best_particle.pos[0] - particle.pos[0]))
+            particle.velocity[1] += (PERSONAL_C * r1 * (particle.best_pos[1] - particle.pos[1])) + (SOCIAL_C * r2 * (swarm.best_particle.pos[1] - particle.pos[1]))
+
+            if particle.velocity[0] > v_max:
+                particle.velocity[0] = v_max
+            if particle.velocity[0] < -v_max:
+                particle.velocity[0] = -v_max
+            if particle.velocity[1] > v_max:
+                particle.velocity[1] = v_max
+            if particle.velocity[1] > -v_max:
+                particle.velocity[1] = -v_max
 
             # Update particle's position
             particle.pos[0] += particle.velocity[0]
             particle.pos[1] += particle.velocity[1]
+            particle.pos[2] += ackley(particle.pos[0], particle.pos[1])
 
-            plt.clf()
-            ax = fig.add_subplot(1, 1, 1, projection='3d')
-            ax.plot_surface(X, Y, ackley(X, Y), cmap='coolwarm')
-            for particle in swarm.particles:
-                ax.scatter(particle.pos[0], particle.pos[1], particle.pos[2], marker='*', c='r')
-            plt.pause(0.01)
+            if particle.pos[2] < swarm.best_particle.pos[2]:
+                swarm.best_particle = particle
+
+            if particle.pos[2] < particle.best_pos[2]:
+                particle.best_pos = particle.pos
+
+            if particle.pos[0] > 3 or particle.pos[1] > 3:
+                particle.pos[0] = np.random.uniform(-3, 3)
+                particle.pos[1] = np.random.uniform(-3, 3)
+                particle.pos[2] = ackley(particle.pos[0], particle.pos[1])
+            if particle.pos[0] < -3 or particle.pos[1] < -3:
+                particle.pos[0] = np.random.uniform(-3, 3)
+                particle.pos[1] = np.random.uniform(-3, 3)
+                particle.pos[2] = ackley(particle.pos[0], particle.pos[1])
+
+        plt.clf()
+        ax = fig.add_subplot(1, 2, 1, projection='3d')
+        axc = fig.add_subplot(1, 2, 2)
+        ax.plot_surface(X, Y, ackley(X, Y), cmap='coolwarm')
+        axc.contourf(X, Y, ackley(X, Y))
+        for particle in swarm.particles:
+            ax.scatter(particle.pos[0], particle.pos[1], particle.pos[2], marker='*', c='r')
+            axc.scatter(particle.pos[0], particle.pos[1], marker='*', c='r')  
+        plt.pause(0.00001)
 
         curr_iter += 1
     plt.show()
