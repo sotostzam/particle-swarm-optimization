@@ -14,7 +14,8 @@ class Particle():
 class Swarm():
     def __init__(self, pop, v_max):
         self.particles = []             # List of particles in the swarm
-        self.best_particle = None       # Best particle of the swarm
+        self.best_pos = None            # Best particle of the swarm
+        self.best_pos_z = math.inf          # Best particle of the swarm
 
         for _ in range(pop):
             x = np.random.uniform(-3, 3)
@@ -23,10 +24,12 @@ class Swarm():
             velocity = np.random.rand(2) * v_max
             particle = Particle(x, y, z, velocity)
             self.particles.append(particle)
-            if self.best_particle != None and particle.pos_z < self.best_particle.pos_z:
-                self.best_particle = particle
+            if self.best_pos != None and particle.pos_z < self.best_pos_z:
+                self.best_pos = particle.pos
+                self.best_pos_z = particle.pos_z
             else:
-                self.best_particle = particle
+                self.best_pos = particle.pos
+                self.best_pos_z = particle.pos_z
 
 # Evaluate Ackley function
 def ackley(x, y, a=20, b=0.2, c=2*math.pi):
@@ -54,15 +57,16 @@ def main():
     swarm = Swarm(population, v_max)
 
     curr_iter = 0
-    while curr_iter < max_iterations and abs(swarm.best_particle.pos_z - GLOBAL_BEST) > CONVERGENCE:
+    while curr_iter < max_iterations and abs(swarm.best_pos_z - GLOBAL_BEST) > CONVERGENCE:
         r1 = np.random.uniform(0, 1)
         r2 = np.random.uniform(0, 1)
 
         for particle in swarm.particles:
             # Update particle's velocity
-            particle.velocity[0] += (PERSONAL_C * r1 * (particle.best_pos[0] - particle.pos[0])) + (SOCIAL_C * r2 * (swarm.best_particle.pos[0] - particle.pos[0]))
-            particle.velocity[1] += (PERSONAL_C * r1 * (particle.best_pos[1] - particle.pos[1])) + (SOCIAL_C * r2 * (swarm.best_particle.pos[1] - particle.pos[1]))
+            particle.velocity[0] += (PERSONAL_C * r1 * (particle.best_pos[0] - particle.pos[0])) + (SOCIAL_C * r2 * (swarm.best_pos[0] - particle.pos[0]))
+            particle.velocity[1] += (PERSONAL_C * r1 * (particle.best_pos[1] - particle.pos[1])) + (SOCIAL_C * r2 * (swarm.best_pos[1] - particle.pos[1]))
 
+            # Check if velocity is exceeded
             if particle.velocity[0] > v_max:
                 particle.velocity[0] = v_max
             if particle.velocity[0] < -v_max:
@@ -77,12 +81,18 @@ def main():
             particle.pos[1] += particle.velocity[1]
             particle.pos_z = ackley(particle.pos[0], particle.pos[1])
 
-            if particle.pos_z < swarm.best_particle.pos_z:
-                swarm.best_particle = particle
+            # Update swarm's best known position
+            if particle.pos_z < swarm.best_pos_z:
+                swarm.best_pos = particle.pos
+                swarm.best_pos_z = particle.pos_z
+                print("New best swarm position: " + str(swarm.best_pos_z))
 
-            if ackley(particle.pos[0], particle.pos[1]) < particle.pos_z:
+            # Update particle's best known position
+            if ackley(particle.pos[0], particle.pos[1]) < swarm.best_pos_z:
+                #print("New best position")
                 particle.best_pos = particle.pos
 
+            # Check if particle is within boundaries
             if particle.pos[0] > 3 or particle.pos[1] > 3:
                 particle.pos[0] = np.random.uniform(-3, 3)
                 particle.pos[1] = np.random.uniform(-3, 3)
@@ -100,7 +110,7 @@ def main():
         for particle in swarm.particles:
             ax.scatter(particle.pos[0], particle.pos[1], particle.pos_z, marker='*', c='r')
             axc.scatter(particle.pos[0], particle.pos[1], marker='*', c='r')  
-        plt.pause(0.00001)
+        plt.pause(0.001)
 
         curr_iter += 1
     plt.show()
