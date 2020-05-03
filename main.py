@@ -40,6 +40,8 @@ def cost_function(x, y, a=20, b=0.2, c=2*math.pi):
 def main():
     dimensions = 2              # Number of dimensions
     max_iterations = 100        # Maximum Iterations
+    B_LO = -3                   # Upper boundary
+    B_HI = 3                    # Upper boundary
     PERSONAL_C = 2.5            # Personal Acceleration Coefficient
     SOCIAL_C = 1.7              # Social Acceleration Coefficient
     GLOBAL_BEST = 0             # Global Best of Cost function
@@ -48,8 +50,8 @@ def main():
     v_max = 0.1                 # Max Particle Velocity
 
     # Initialize plotting variables
-    x = np.linspace(-3, 3, 50)
-    y = np.linspace(-3, 3, 50)
+    x = np.linspace(B_LO, B_HI, 50)
+    y = np.linspace(B_LO, B_HI, 50)
     X, Y = np.meshgrid(x, y)
     fig = plt.figure(figsize=(10,5))
 
@@ -67,15 +69,11 @@ def main():
                 # Update particle's velocity
                 particle.velocity[i] += PERSONAL_C * r1 * (particle.best_pos[i] - particle.pos[i]) + SOCIAL_C * r2 * (swarm.best_pos[i] - particle.pos[i])
 
-            # Check if velocity is exceeded
-            if particle.velocity[0] > v_max:
-                particle.velocity[0] = v_max
-            if particle.velocity[0] < -v_max:
-                particle.velocity[0] = -v_max
-            if particle.velocity[1] > v_max:
-                particle.velocity[1] = v_max
-            if particle.velocity[1] < -v_max:
-                particle.velocity[1] = -v_max
+                # Check if velocity is exceeded
+                if particle.velocity[i] > v_max:
+                    particle.velocity[i] = v_max
+                if particle.velocity[i] < -v_max:
+                    particle.velocity[i] = -v_max
 
             # Update particle's current position
             particle.pos[0] += particle.velocity[0]
@@ -92,17 +90,17 @@ def main():
                 particle.best_pos = particle.pos
 
             # Check if particle is within boundaries
-            if particle.pos[0] > 3:
-                particle.pos[0] = np.random.uniform(-3, 3)
+            if particle.pos[0] > B_HI:
+                particle.pos[0] = np.random.uniform(B_LO, B_HI)
                 particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
-            if particle.pos[1] > 3:
-                particle.pos[1] = np.random.uniform(-3, 3)
+            if particle.pos[1] > B_HI:
+                particle.pos[1] = np.random.uniform(B_LO, B_HI)
                 particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
-            if particle.pos[0] < -3:
-                particle.pos[0] = np.random.uniform(-3, 3)
+            if particle.pos[0] < B_LO:
+                particle.pos[0] = np.random.uniform(B_LO, B_HI)
                 particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
-            if particle.pos[1] < -3:
-                particle.pos[1] = np.random.uniform(-3, 3)
+            if particle.pos[1] < B_LO:
+                particle.pos[1] = np.random.uniform(B_LO, B_HI)
                 particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
 
         plt.clf()
