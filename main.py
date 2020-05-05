@@ -3,6 +3,14 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import numpy as np
 
+DIMENSIONS = 2              # Number of dimensions
+B_LO = -5                   # Upper boundary
+B_HI = 5                    # Upper boundary
+PERSONAL_C = 2.5            # Personal Acceleration Coefficient
+SOCIAL_C = 1.7              # Social Acceleration Coefficient
+GLOBAL_BEST = 0             # Global Best of Cost function
+CONVERGENCE = 0.01          # Convergence value
+
 # Particle class
 class Particle():
     def __init__(self, x, y, z, velocity):
@@ -37,16 +45,8 @@ def cost_function(x, y, a=20, b=0.2, c=2*math.pi):
     term_2 = np.exp((np.cos(c * x) + np.cos(c * y)) / 2)
     return -1 * a * term_1 - term_2 + a + np.exp(1)
 
-def main():
-    dimensions = 2              # Number of dimensions
-    max_iterations = 100        # Maximum Iterations
-    B_LO = -5                   # Upper boundary
-    B_HI = 5                    # Upper boundary
-    PERSONAL_C = 2.5            # Personal Acceleration Coefficient
-    SOCIAL_C = 1.7              # Social Acceleration Coefficient
-    GLOBAL_BEST = 0             # Global Best of Cost function
-    CONVERGENCE = 0.01          # Convergence value
-    population = 20             # Particle Swarm Size
+def particle_swarm_optimization(population, max_iterations, v_max):
+
     v_max = 0.1                 # Max Particle Velocity
 
     # Initialize plotting variables
@@ -62,7 +62,7 @@ def main():
     while curr_iter < max_iterations and abs(swarm.best_pos_z - GLOBAL_BEST) > CONVERGENCE:
         for particle in swarm.particles:
 
-            for i in range(0, dimensions):
+            for i in range(0, DIMENSIONS):
                 r1 = np.random.uniform(0, 1)
                 r2 = np.random.uniform(0, 1)
                 
@@ -79,15 +79,15 @@ def main():
             particle.pos += particle.velocity
             particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
 
-            # Update swarm's best known position
-            if particle.pos_z < swarm.best_pos_z:
-                swarm.best_pos = particle.pos.copy()
-                swarm.best_pos_z = particle.pos_z
-
             # Update particle's best known position
             if particle.pos_z < cost_function(particle.best_pos[0], particle.best_pos[1]):
                 particle.best_pos = particle.pos.copy()
 
+                # Update swarm's best known position
+                if particle.pos_z < swarm.best_pos_z:
+                    swarm.best_pos = particle.pos.copy()
+                    swarm.best_pos_z = particle.pos_z
+                    
             # Check if particle is within boundaries
             if particle.pos[0] > B_HI:
                 particle.pos[0] = np.random.uniform(B_LO, B_HI)
@@ -117,4 +117,4 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    particle_swarm_optimization(population=20, max_iterations=100, v_max=0.1)
