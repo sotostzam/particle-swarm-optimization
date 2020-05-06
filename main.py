@@ -12,7 +12,7 @@ POPULATION = 20             # Number of particles in the swarm
 V_MAX = 0.1                 # Maximum velocity value
 PERSONAL_C = 2.0            # Personal coefficient factor
 SOCIAL_C = 2.0              # Social coefficient factor
-CONVERGENCE = 0.01          # Convergence value
+CONVERGENCE = 0.001         # Convergence value
 MAX_ITER = 100              # Maximum number of iterrations
 
 # Particle class
@@ -55,7 +55,7 @@ def particle_swarm_optimization():
     x = np.linspace(B_LO, B_HI, 50)
     y = np.linspace(B_LO, B_HI, 50)
     X, Y = np.meshgrid(x, y)
-    fig = plt.figure(figsize=(10,5))
+    fig = plt.figure("Particle Swarm Optimization")
 
     # Initialize swarm
     swarm = Swarm(POPULATION, V_MAX)
@@ -112,15 +112,14 @@ def particle_swarm_optimization():
                 particle.pos[1] = np.random.uniform(B_LO, B_HI)
                 particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
 
-        plt.clf()
-        ax = fig.add_subplot(1, 2, 1, projection='3d')
-        axc = fig.add_subplot(1, 2, 2)
-        ax.plot_surface(X, Y, cost_function(X, Y), cmap='winter')
-        axc.contourf(X, Y, cost_function(X, Y))
+        fig.clf()
+        ax = fig.add_subplot(1, 1, 1)
+        ac = ax.contourf(X, Y, cost_function(X, Y), cmap='viridis')
+        fig.colorbar(ac)
         for particle in swarm.particles:
-            ax.scatter(particle.pos[0], particle.pos[1], particle.pos_z, marker='*', c='r')
-            axc.scatter(particle.pos[0], particle.pos[1], marker='*', c='r')
-            axc.arrow(particle.pos[0], particle.pos[1], particle.velocity[0], particle.velocity[1], head_width=0.05, head_length=0.1, fc='k', ec='k')
+            ax.scatter(particle.pos[0], particle.pos[1], marker='*', c='r')
+            ax.arrow(particle.pos[0], particle.pos[1], particle.velocity[0], particle.velocity[1], head_width=0.1, head_length=0.1, color='k')
+        plt.subplots_adjust(right = 0.95)
         plt.pause(0.001)
 
         # Check for convergence
