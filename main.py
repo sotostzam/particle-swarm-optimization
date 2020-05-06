@@ -4,12 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 DIMENSIONS = 2              # Number of dimensions
-B_LO = -5                   # Upper boundary
-B_HI = 5                    # Upper boundary
-PERSONAL_C = 2.5            # Personal Acceleration Coefficient
-SOCIAL_C = 1.7              # Social Acceleration Coefficient
 GLOBAL_BEST = 0             # Global Best of Cost function
+B_LO = -5                   # Upper boundary of search space
+B_HI = 5                    # Upper boundary of search space
+
+POPULATION = 20             # Number of particles in the swarm
+V_MAX = 0.1                 # Maximum velocity value
+PERSONAL_C = 2.5            # Personal coefficient factor
+SOCIAL_C = 1.7              # Social coefficient factor
 CONVERGENCE = 0.01          # Convergence value
+MAX_ITER = 100              # Maximum number of iterrations
 
 # Particle class
 class Particle():
@@ -45,9 +49,10 @@ def cost_function(x, y, a=20, b=0.2, c=2*math.pi):
     term_2 = np.exp((np.cos(c * x) + np.cos(c * y)) / 2)
     return -1 * a * term_1 - term_2 + a + np.exp(1)
 
-def particle_swarm_optimization(population, max_iterations, v_max):
+def particle_swarm_optimization():
 
-    v_max = 0.1                 # Max Particle Velocity
+    # Initialize inertia weight
+    inertia_weight = 0.5 + (np.random.rand()/2)
 
     # Initialize plotting variables
     x = np.linspace(B_LO, B_HI, 50)
@@ -56,10 +61,10 @@ def particle_swarm_optimization(population, max_iterations, v_max):
     fig = plt.figure(figsize=(10,5))
 
     # Initialize swarm
-    swarm = Swarm(population, v_max)
+    swarm = Swarm(POPULATION, V_MAX)
 
     curr_iter = 0
-    while curr_iter < max_iterations and abs(swarm.best_pos_z - GLOBAL_BEST) > CONVERGENCE:
+    while curr_iter < MAX_ITER and abs(swarm.best_pos_z - GLOBAL_BEST) > CONVERGENCE:
         for particle in swarm.particles:
 
             for i in range(0, DIMENSIONS):
@@ -67,13 +72,13 @@ def particle_swarm_optimization(population, max_iterations, v_max):
                 r2 = np.random.uniform(0, 1)
                 
                 # Update particle's velocity
-                particle.velocity[i] += PERSONAL_C * r1 * (particle.best_pos[i] - particle.pos[i]) + SOCIAL_C * r2 * (swarm.best_pos[i] - particle.pos[i])
+                particle.velocity[i] = inertia_weight*particle.velocity[i] + PERSONAL_C * r1 * (particle.best_pos[i] - particle.pos[i]) + SOCIAL_C * r2 * (swarm.best_pos[i] - particle.pos[i])
 
                 # Check if velocity is exceeded
-                if particle.velocity[i] > v_max:
-                    particle.velocity[i] = v_max
-                if particle.velocity[i] < -v_max:
-                    particle.velocity[i] = -v_max
+                if particle.velocity[i] > V_MAX:
+                    particle.velocity[i] = V_MAX
+                if particle.velocity[i] < -V_MAX:
+                    particle.velocity[i] = -V_MAX
 
             # Update particle's current position
             particle.pos += particle.velocity
@@ -117,4 +122,4 @@ def particle_swarm_optimization(population, max_iterations, v_max):
     plt.show()
 
 if __name__ == "__main__":
-    particle_swarm_optimization(population=20, max_iterations=100, v_max=0.1)
+    particle_swarm_optimization()
