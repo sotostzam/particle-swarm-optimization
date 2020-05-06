@@ -30,8 +30,8 @@ class Swarm():
         self.best_pos_z = math.inf      # Best particle of the swarm
 
         for _ in range(pop):
-            x = np.random.uniform(-5, 5)
-            y = np.random.uniform(-5, 5)
+            x = np.random.uniform(B_LO, B_HI)
+            y = np.random.uniform(B_LO, B_HI)
             z = cost_function(x, y)
             velocity = np.random.rand(2) * v_max
             particle = Particle(x, y, z, velocity)
@@ -66,6 +66,11 @@ def particle_swarm_optimization():
     curr_iter = 0
     while curr_iter < MAX_ITER:
 
+        fig.clf()
+        ax = fig.add_subplot(1, 1, 1)
+        ac = ax.contourf(X, Y, cost_function(X, Y), cmap='viridis')
+        fig.colorbar(ac)
+
         for particle in swarm.particles:
 
             for i in range(0, DIMENSIONS):
@@ -84,6 +89,9 @@ def particle_swarm_optimization():
                     particle.velocity[i] = -V_MAX
                 else:
                     particle.velocity[i] = new_velocity
+
+            ax.scatter(particle.pos[0], particle.pos[1], marker='*', c='r')
+            ax.arrow(particle.pos[0], particle.pos[1], particle.velocity[0], particle.velocity[1], head_width=0.1, head_length=0.1, color='k')
 
             # Update particle's current position
             particle.pos += particle.velocity
@@ -112,15 +120,8 @@ def particle_swarm_optimization():
                 particle.pos[1] = np.random.uniform(B_LO, B_HI)
                 particle.pos_z = cost_function(particle.pos[0], particle.pos[1])
 
-        fig.clf()
-        ax = fig.add_subplot(1, 1, 1)
-        ac = ax.contourf(X, Y, cost_function(X, Y), cmap='viridis')
-        fig.colorbar(ac)
-        for particle in swarm.particles:
-            ax.scatter(particle.pos[0], particle.pos[1], marker='*', c='r')
-            ax.arrow(particle.pos[0], particle.pos[1], particle.velocity[0], particle.velocity[1], head_width=0.1, head_length=0.1, color='k')
         plt.subplots_adjust(right = 0.95)
-        plt.pause(0.001)
+        plt.pause(0.00001)
 
         # Check for convergence
         if abs(swarm.best_pos_z - GLOBAL_BEST) < CONVERGENCE:
